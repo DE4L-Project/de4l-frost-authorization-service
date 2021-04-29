@@ -16,12 +16,17 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven {
+		url "https://devdocker.wifa.uni-leipzig.de:8371/repository/maven-public/"
+	}
 }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
+//	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'de.fraunhofer.iosb.ilt:FROST-Client:0.35-SNAPSHOT'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'

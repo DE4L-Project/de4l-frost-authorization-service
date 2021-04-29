@@ -1,3 +1,6 @@
+# Local dev files
+src/main/resources/application-dev-local.properties
+
 # Compiled class file
 *.class
 
