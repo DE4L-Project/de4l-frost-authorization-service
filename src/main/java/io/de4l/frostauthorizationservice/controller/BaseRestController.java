@@ -33,15 +33,11 @@ public abstract class BaseRestController {
         this.staEntity = staEntity;
     }
 
-    protected String executeFrostRequest(JwtAuthenticationToken token, String expand) throws RestClientException {
-        return executeFrostRequest(null, token, expand);
-    }
-
-    protected String executeFrostRequest(String id, JwtAuthenticationToken token, String expand) throws RestClientException {
+    protected String executeFrostRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
         KeycloakPrincipal keycloakPrincipal = new KeycloakPrincipal(token);
         RestTemplate restTemplate = new RestTemplate();
 
-        URI requestUri = this.buildFrostRequestUrl(id, keycloakPrincipal.getUserId(), expand);
+        URI requestUri = this.buildFrostRequestUrl(request, keycloakPrincipal.getUserId(), expand);
         ResponseEntity<String> response = restTemplate.exchange(
                 requestUri,
                 HttpMethod.GET,
@@ -57,12 +53,8 @@ public abstract class BaseRestController {
         return headers;
     }
 
-    protected URI buildFrostRequestUrl(String userId, String expand) {
-        return this.buildFrostRequestUrl(null, userId, expand);
-    }
-
-    protected URI buildFrostRequestUrl(String id, String userId, String expand) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + staEntity.getUrlPath(id))
+    protected URI buildFrostRequestUrl(HttpServletRequest request, String userId, String expand) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI())
                 .queryParam("$filter",
                         staEntity.getThingPropertyPath() + "/" + sensorThingsServiceProperties.getOwnerIdProperty() + " eq '" + userId +
                                 "' or substringOf('\"" + userId + "\"'," + staEntity.getThingPropertyPath() + "/" + sensorThingsServiceProperties.getSharedWithIdsProperty() + ")");

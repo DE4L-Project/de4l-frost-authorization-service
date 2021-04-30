@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 public class DatastreamsController extends BaseRestController {
 
@@ -15,21 +17,13 @@ public class DatastreamsController extends BaseRestController {
         super(sensorThingsServiceProperties, new Datastream());
     }
 
-    @GetMapping(value = "Datastreams({id})", produces = "application/json")
+    @GetMapping(value = {"Datastreams({id})", "Datastreams"}, produces = "application/json")
     public String single(
-            @PathVariable("id") String id,
+            @PathVariable(value = "id", required = false) String id,
             @RequestParam(value = "$expand", required = false) String expand,
-            JwtAuthenticationToken token
+            JwtAuthenticationToken token,
+            HttpServletRequest request
     ) {
-        return executeFrostRequest(id, token, expand);
+        return executeFrostRequest(request, token, expand);
     }
-
-    @GetMapping(value = "Datastreams", produces = "application/json")
-    public String list(
-            @RequestParam(value = "$expand", required = false) String expand,
-            JwtAuthenticationToken token
-    ) {
-        return executeFrostRequest(token, expand);
-    }
-
 }

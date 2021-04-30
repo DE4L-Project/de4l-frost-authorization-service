@@ -21,26 +21,29 @@ public class ObservationsController extends BaseRestController {
     public String single(
             @PathVariable("id") String id,
             @RequestParam(value = "$expand", required = false) String expand,
-            JwtAuthenticationToken token
+            JwtAuthenticationToken token,
+            HttpServletRequest request
     ) {
-        return executeFrostRequest(id, token, expand);
+        return executeFrostRequest(request, token, expand);
     }
 
     @GetMapping(value = "Observations", produces = "application/json")
     public String list(
             @RequestParam(value = "$expand", required = false) String expand,
-            JwtAuthenticationToken token
+            JwtAuthenticationToken token,
+            HttpServletRequest request
     ) {
-        return executeFrostRequest(token, expand);
+        return executeFrostRequest(request, token, expand);
     }
 
     @GetMapping(value = "Datastreams({id})/Observations", produces = "application/json")
     public String listForDatastream(
             @PathVariable("id") String id,
             @RequestParam(value = "$expand", required = false) String expand,
-            JwtAuthenticationToken token
+            JwtAuthenticationToken token,
+            HttpServletRequest request
     ) {
-        return executeFrostRequest(id, token, expand);
+        return executeFrostRequest(request, token, expand);
     }
 
 }
