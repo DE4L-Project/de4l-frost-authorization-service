@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 
 @Getter
-public class KeycloakPrincipal implements Principal {
+public class KeycloakUser implements Principal {
 
     private final static String USER_ID_KEY = "sub";
     private final static String USER_PREFERRED_USERNAME_KEY = "preferred_username";
@@ -20,7 +20,7 @@ public class KeycloakPrincipal implements Principal {
     @JsonIgnore
     private final JwtAuthenticationToken jwtAuthenticationToken;
 
-    public KeycloakPrincipal(JwtAuthenticationToken jwtAuthenticationToken) {
+    public KeycloakUser(JwtAuthenticationToken jwtAuthenticationToken) {
         Assert.notNull(jwtAuthenticationToken, "jwtAuthenticationToken can not be null!");
         this.jwtAuthenticationToken = jwtAuthenticationToken;
     }

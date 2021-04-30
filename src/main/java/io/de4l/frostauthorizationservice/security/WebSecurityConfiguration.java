@@ -47,16 +47,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         this.routePermissionsConfiguration.configureHttpSecurityPermissions(httpSecurity);
     }
 
-//    @Bean
-//    public CustomCorsFilter corsFilter() {
-//        return new CustomCorsFilter();
-//    }
-
-    @Override
-    public void configure(WebSecurity webSecurity) {
-        this.routePermissionsConfiguration.configureWebSecurityPermissions(webSecurity);
-    }
-
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         Converter<Jwt, Collection<GrantedAuthority>> grantedAuthoritiesConverter = jwt -> {
             Map<String, List<String>> realmAccess = jwt.getClaim("realm_access");

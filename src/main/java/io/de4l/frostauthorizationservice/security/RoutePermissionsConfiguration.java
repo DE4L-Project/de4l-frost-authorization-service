@@ -19,17 +19,4 @@ public class RoutePermissionsConfiguration {
         Assert.notNull(this.ADMIN_ROLE, "ADMIN role can not be null, set 'security.admin.role' in application properties.");
         return httpSecurity.authorizeRequests().anyRequest().fullyAuthenticated().and();
     }
-
-    public WebSecurity configureWebSecurityPermissions(WebSecurity webSecurity) {
-        // Route                    public
-        // /configurations          no
-        // /configurations/         no
-        // /configurations/foo      yes
-        // /configurations/foo/bar/ yes
-        return webSecurity
-                .ignoring()
-                .regexMatchers(HttpMethod.GET, "Things")
-                .antMatchers(HttpMethod.OPTIONS)
-                .and();
-    }
 }

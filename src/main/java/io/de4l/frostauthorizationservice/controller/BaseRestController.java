@@ -1,9 +1,8 @@
 package io.de4l.frostauthorizationservice.controller;
 
-import de.fraunhofer.iosb.ilt.sta.StatusCodeException;
 import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.StaEntity;
-import io.de4l.frostauthorizationservice.security.KeycloakPrincipal;
+import io.de4l.frostauthorizationservice.security.KeycloakUser;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.*;
@@ -31,16 +30,21 @@ public abstract class BaseRestController {
         this.staEntity = staEntity;
     }
 
+    @ExceptionHandler(HttpClientErrorException.class)
+    public ResponseEntity<Object> handleRestClientException(HttpClientErrorException e) {
+        log.error(e.getMessage());
+        return new ResponseEntity<>(e.getResponseBodyAsString(), getErrorHttpHeaders(), e.getStatusCode());
+    }
+
     protected String executeFrostRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
-        KeycloakPrincipal keycloakPrincipal = new KeycloakPrincipal(token);
+        KeycloakUser keycloakUser = new KeycloakUser(token);
         RestTemplate restTemplate = new RestTemplate();
 
-        URI requestUri = this.buildFrostRequestUrl(request, keycloakPrincipal.getUserId(), expand);
+        URI requestUri = this.buildFrostRequestUrl(request, keycloakUser.getUserId(), expand);
         ResponseEntity<String> response = restTemplate.exchange(
                 requestUri,
                 HttpMethod.GET,
-                new HttpEntity(null, buildRequestHeaders(keycloakPrincipal.getJwtAuthenticationToken().getToken().getTokenValue())),
-                String.class);
+                new HttpEntity<String>(null, buildRequestHeaders(keycloakUser.getJwtAuthenticationToken().getToken().getTokenValue())), String.class);
         return response.getBody();
     }
 
@@ -52,33 +56,27 @@ public abstract class BaseRestController {
     }
 
     protected URI buildFrostRequestUrl(HttpServletRequest request, String userId, String expand) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI())
-                .queryParam("$filter",
-                        staEntity.getThingPropertyPath() + "/" + sensorThingsServiceProperties.getOwnerIdProperty() + " eq '" + userId +
-                                "' or substringOf('\"" + userId + "\"'," + staEntity.getThingPropertyPath() + "/" + sensorThingsServiceProperties.getSharedWithIdsProperty() + ")");
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI());
+        uriComponentsBuilder.queryParam("$filter", buildOwnerQuery(userId) + " or " + buildSharedWithQuery(userId));
 
         if (Strings.isNotBlank(expand)) {
-            builder.queryParam("$expand", expand);
+            uriComponentsBuilder.queryParam("$expand", expand);
         }
 
-        return builder.build().toUri();
-    }
-
-    @ExceptionHandler(StatusCodeException.class)
-    public ResponseEntity<Object> handleStaServiceException(StatusCodeException e) {
-        log.error(e.getReturnedContent(), e);
-        return new ResponseEntity<>(e.getReturnedContent(), getErrorHttpHeaders(), e.getStatusCode());
-    }
-
-    @ExceptionHandler(HttpClientErrorException.class)
-    public ResponseEntity<Object> handleRestClientException(HttpClientErrorException e) {
-        log.error(e.getMessage());
-        return new ResponseEntity<>(e.getResponseBodyAsString(), getErrorHttpHeaders(), e.getStatusCode());
+        return uriComponentsBuilder.build().toUri();
     }
 
     private HttpHeaders getErrorHttpHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return httpHeaders;
+    }
+
+    private String buildOwnerQuery(String userId) {
+        return String.format("%s/%s eq '%s'", staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getOwnerIdProperty(), userId);
+    }
+
+    private String buildSharedWithQuery(String userId) {
+        return String.format("substringOf('\"%s\"',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getSharedWithIdsProperty());
     }
 }
