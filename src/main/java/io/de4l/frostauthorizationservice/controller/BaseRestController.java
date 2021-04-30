@@ -1,8 +1,8 @@
 package io.de4l.frostauthorizationservice.controller;
 
 import de.fraunhofer.iosb.ilt.sta.StatusCodeException;
-import io.de4l.frostauthorizationservice.controller.sta.StaEntity;
 import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
+import io.de4l.frostauthorizationservice.model.StaEntity;
 import io.de4l.frostauthorizationservice.security.KeycloakPrincipal;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
@@ -16,10 +16,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
-import java.security.Principal;
 
 @RequestMapping(path = "/FROST-Server/v1.0/")
 @CrossOrigin(origins = "*")

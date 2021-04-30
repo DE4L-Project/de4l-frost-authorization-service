@@ -1,6 +1,6 @@
 package io.de4l.frostauthorizationservice.controller;
 
-import io.de4l.frostauthorizationservice.controller.sta.Datastream;
+import io.de4l.frostauthorizationservice.model.Datastream;
 import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
