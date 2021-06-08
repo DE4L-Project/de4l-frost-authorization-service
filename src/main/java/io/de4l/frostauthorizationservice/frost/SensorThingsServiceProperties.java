@@ -11,9 +11,9 @@ public class SensorThingsServiceProperties {
     @Value("${app.sta.url}")
     private String frostUri;
 
-    @Value("${app.sta.ownerIdProperty}")
-    private String ownerIdProperty;
+    @Value("${app.sta.ownerProperty}")
+    private String ownerProperty;
 
-    @Value("${app.sta.sharedWithIdsProperty}")
-    private String sharedWithIdsProperty;
+    @Value("${app.sta.publicProperty}")
+    private String publicProperty;
 }

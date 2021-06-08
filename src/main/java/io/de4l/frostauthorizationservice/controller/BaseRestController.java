@@ -73,10 +73,10 @@ public abstract class BaseRestController {
     }
 
     private String buildOwnerQuery(String userId) {
-        return String.format("%s/%s eq '%s'", staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getOwnerIdProperty(), userId);
+        return String.format("%s/%s eq '%s'", staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getOwnerProperty(), userId);
     }
 
     private String buildSharedWithQuery(String userId) {
-        return String.format("substringOf('\"%s\"',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getSharedWithIdsProperty());
+        return String.format("substringOf('\"%s\"',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getPublicProperty());
     }
 }
