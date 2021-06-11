@@ -28,11 +28,11 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private JwtAuthenticationConverter jwtAuthenticationConverter() {
         // create a custom JWT converter to map the roles from the token as granted authorities
-        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        var jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName(JWT_ROLE_NAME); // default is: scope, scp
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix(ROLE_PREFIX ); // default is: SCOPE_
 
-        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
     }

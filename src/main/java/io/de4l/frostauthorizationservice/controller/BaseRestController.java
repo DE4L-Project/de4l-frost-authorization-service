@@ -25,7 +25,7 @@ public abstract class BaseRestController {
     protected final SensorThingsServiceProperties sensorThingsServiceProperties;
     protected final StaEntity staEntity;
 
-    public BaseRestController(SensorThingsServiceProperties sensorThingsServiceProperties, StaEntity staEntity) {
+    protected BaseRestController(SensorThingsServiceProperties sensorThingsServiceProperties, StaEntity staEntity) {
         this.sensorThingsServiceProperties = sensorThingsServiceProperties;
         this.staEntity = staEntity;
     }
@@ -37,10 +37,10 @@ public abstract class BaseRestController {
     }
 
     protected String executeFrostRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
-        KeycloakUser keycloakUser = new KeycloakUser(token);
-        RestTemplate restTemplate = new RestTemplate();
+        var keycloakUser = new KeycloakUser(token);
+        var restTemplate = new RestTemplate();
 
-        URI requestUri = this.buildFrostRequestUrl(request, keycloakUser.getUserId(), expand);
+        var requestUri = this.buildFrostRequestUrl(request, keycloakUser.getUserId(), expand);
         ResponseEntity<String> response = restTemplate.exchange(
                 requestUri,
                 HttpMethod.GET,
@@ -49,14 +49,14 @@ public abstract class BaseRestController {
     }
 
     protected HttpHeaders buildRequestHeaders(String token) {
-        HttpHeaders headers = new HttpHeaders();
+        var headers = new HttpHeaders();
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
 
     protected URI buildFrostRequestUrl(HttpServletRequest request, String userId, String expand) {
-        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI());
+        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI());
         uriComponentsBuilder.queryParam("$filter", buildOwnerQuery(userId) + " or " + buildSharedWithQuery(userId));
 
         if (Strings.isNotBlank(expand)) {
@@ -67,7 +67,7 @@ public abstract class BaseRestController {
     }
 
     private HttpHeaders getErrorHttpHeaders() {
-        HttpHeaders httpHeaders = new HttpHeaders();
+        var httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return httpHeaders;
     }
