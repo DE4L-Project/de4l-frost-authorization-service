@@ -5,6 +5,7 @@ import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Thing;
 import io.de4l.frostauthorizationservice.security.KeycloakUser;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,13 +31,13 @@ public class ThingsController extends BaseRestController {
         return executeFrostRequest(request, token, expand);
     }
 
+    @Secured("admin")
     @GetMapping(value = "Things", produces = "application/json")
     public String list(
             @RequestParam(value = "$expand", required = false) String expand,
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) throws IOException {
-        new KeycloakUser(token).isAdmin();
         return executeFrostRequest(request, token, expand);
     }
 }

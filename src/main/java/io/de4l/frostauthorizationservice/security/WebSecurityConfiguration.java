@@ -1,69 +1,39 @@
 package io.de4l.frostauthorizationservice.security;
 
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.convert.converter.Converter;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+@Configuration
 @EnableWebSecurity
-@Log4j2
-@ConditionalOnProperty(prefix = "app.security", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableGlobalMethodSecurity(securedEnabled = true)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private final RoutePermissionsConfiguration routePermissionsConfiguration;
-
-    @Autowired
-    public WebSecurityConfiguration(RoutePermissionsConfiguration routePermissionsConfiguration) {
-        this.routePermissionsConfiguration = routePermissionsConfiguration;
-    }
+    private static final String JWT_ROLE_NAME = "roles";
+    private static final String ROLE_PREFIX = "ROLE_";
 
     @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-//                .addFilterBefore(new CustomCorsFilter(), SessionManagementFilter.class)
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .authorizeRequests().anyRequest().authenticated()
+                .and().csrf().disable()
                 .cors()
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .oauth2ResourceServer()
-                .jwt()
+                .and().oauth2ResourceServer().jwt()
                 .jwtAuthenticationConverter(jwtAuthenticationConverter());
-
-        this.routePermissionsConfiguration.configureHttpSecurityPermissions(httpSecurity);
     }
 
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
-        Converter<Jwt, Collection<GrantedAuthority>> grantedAuthoritiesConverter = jwt -> {
-            Map<String, List<String>> realmAccess = jwt.getClaim("realm_access");
-            if (realmAccess != null) {
-                List<String> roles = realmAccess.get("roles");
-                if (roles != null) {
-                    return roles.stream()
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
-                }
-            }
-            return new ArrayList<>();
-        };
+    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+        // create a custom JWT converter to map the roles from the token as granted authorities
+        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName(JWT_ROLE_NAME); // default is: scope, scp
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix(ROLE_PREFIX ); // default is: SCOPE_
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
     }
-
 }

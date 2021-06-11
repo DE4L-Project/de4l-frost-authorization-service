@@ -61,5 +61,6 @@ public class KeycloakUser implements Principal {
         });
         List<String> list = reader.readValue(arrayNode);
         return list.contains("admin");
+
     }
 }
