@@ -1,5 +1,6 @@
-package io.de4l.frostauthorizationservice.controller;
+package io.de4l.frostauthorizationservice.controller.datastreams;
 
+import io.de4l.frostauthorizationservice.controller.BaseRestController;
 import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Datastream;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -25,7 +26,7 @@ public class DatastreamsController extends BaseRestController {
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performReadRequest(request, token, expand);
     }
 
     @GetMapping(value = { "Datastreams"}, produces = "application/json")
@@ -34,7 +35,7 @@ public class DatastreamsController extends BaseRestController {
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performReadRequest(request, token, expand);
     }
 
     @GetMapping(value = { "Things({id})/Datastreams"}, produces = "application/json")
@@ -44,6 +45,6 @@ public class DatastreamsController extends BaseRestController {
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performReadRequest(request, token, expand);
     }
 }

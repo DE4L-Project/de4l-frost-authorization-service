@@ -1,5 +1,6 @@
-package io.de4l.frostauthorizationservice.controller;
+package io.de4l.frostauthorizationservice.controller.things;
 
+import io.de4l.frostauthorizationservice.controller.BaseRestController;
 import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Thing;
 import lombok.extern.log4j.Log4j2;
@@ -24,7 +25,7 @@ public class ThingsController extends BaseRestController {
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performReadRequest(request, token, expand);
     }
 
     @GetMapping(value = {"Datastreams({id})/Thing"}, produces = "application/json")
@@ -34,16 +35,17 @@ public class ThingsController extends BaseRestController {
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performReadRequest(request, token, expand);
     }
 
-    //@Secured({"admin", "user"})
     @GetMapping(value = "Things", produces = "application/json")
     public String list(
             @RequestParam(value = "$expand", required = false) String expand,
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performReadRequest(request, token, expand);
     }
+
+
 }

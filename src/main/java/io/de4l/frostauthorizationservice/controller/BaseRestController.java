@@ -36,28 +36,46 @@ public abstract class BaseRestController {
         return new ResponseEntity<>(e.getResponseBodyAsString(), getErrorHttpHeaders(), e.getStatusCode());
     }
 
-    protected String executeFrostRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
-        var keycloakUser = new KeycloakUser(token);
-        var restTemplate = new RestTemplate();
+    protected String performReadRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
+        URI requestUri;
+        if (token == null) {
+            // Public Request
+            requestUri = this.buildUnauthorizedRequestUrl(request, expand);
+        } else {
+            // Potential authenticated Request
+            var keycloakUser = new KeycloakUser(token);
+            requestUri = this.buildAuthorizedRequestUri(request, keycloakUser.getUserId(), expand);
+        }
 
-        var requestUri = this.buildFrostRequestUrl(request, keycloakUser.getUserId(), expand);
+        var restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(
                 requestUri,
                 HttpMethod.GET,
-                new HttpEntity<String>(null, buildRequestHeaders(keycloakUser.getJwtAuthenticationToken().getToken().getTokenValue())), String.class);
+                new HttpEntity<String>(null, buildRequestHeaders()), String.class);
         return response.getBody();
     }
 
-    protected HttpHeaders buildRequestHeaders(String token) {
+
+    protected HttpHeaders buildRequestHeaders() {
         var headers = new HttpHeaders();
-        headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
 
-    protected URI buildFrostRequestUrl(HttpServletRequest request, String userId, String expand) {
+    protected URI buildAuthorizedRequestUri(HttpServletRequest request, String userId, String expand) {
         var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI());
-        uriComponentsBuilder.queryParam("$filter", buildOwnerQuery(userId) + " or " + buildSharedWithQuery(userId));
+        uriComponentsBuilder.queryParam("$filter", buildOwnerFilter(userId) + " or " + buildPublicFilter() + " or " + buildConsumerFilter(userId));
+
+        if (Strings.isNotBlank(expand)) {
+            uriComponentsBuilder.queryParam("$expand", expand);
+        }
+
+        return uriComponentsBuilder.build().toUri();
+    }
+
+    protected URI buildUnauthorizedRequestUrl(HttpServletRequest request, String expand) {
+        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI());
+        uriComponentsBuilder.queryParam("$filter",buildPublicFilter());
 
         if (Strings.isNotBlank(expand)) {
             uriComponentsBuilder.queryParam("$expand", expand);
@@ -72,11 +90,17 @@ public abstract class BaseRestController {
         return httpHeaders;
     }
 
-    private String buildOwnerQuery(String userId) {
+    private String buildOwnerFilter(String userId) {
         return String.format("%s/%s eq '%s'", staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getOwnerProperty(), userId);
     }
 
-    private String buildSharedWithQuery(String userId) {
-        return String.format("substringOf('\"%s\"',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getPublicProperty());
+    private String buildPublicFilter() {
+        return String.format("%s/%s eq 'true'", staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getPublicProperty());
     }
+
+    private String buildConsumerFilter(String userId) {
+        return String.format("substringOf('\"%s\"',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getConsumerProperty());
+    }
+
+
 }

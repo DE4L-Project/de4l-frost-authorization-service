@@ -16,4 +16,7 @@ public class SensorThingsServiceProperties {
 
     @Value("${app.sta.publicProperty}")
     private String publicProperty;
+
+    @Value("de4lConsumer")
+    private String consumerProperty;
 }
