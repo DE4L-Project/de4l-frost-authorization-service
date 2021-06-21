@@ -15,13 +15,23 @@ public class ObservationsController extends BaseRestController {
         super(sensorThingsServiceProperties, new Observation());
     }
 
-    @GetMapping(value = {"Observations", "Observations({id})}", "Datastreams({id})/Observations"}, produces = "application/json")
+    @GetMapping(value = {"Observations", "Observations({id})", "Datastreams({id})/Observations"}, produces = "application/json")
     public ResponseEntity<String> getObservation(
             @RequestParam(value = "$expand", required = false) String expand,
             JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
         return performReadRequest(request, token, expand);
+    }
+
+    @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.PATCH},
+            value = "Observations({id})", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> updateThing(
+            @RequestBody String body,
+            JwtAuthenticationToken token,
+            HttpServletRequest request
+    ) {
+        return performUpdateRequest(request, token, body);
     }
 
     @PostMapping(value = "Datastreams({id})/Observations", consumes = "application/json", produces = "application/json")
