@@ -110,7 +110,6 @@ public abstract class BaseRestController {
         }
     }
 
-    // TODO: Validate check!
     protected boolean isPrincipalTheThingOwner(String requestUriString, String principalId) {
         try {
             var requestUri = buildOwnerRequestUri(requestUriString, principalId);
@@ -118,7 +117,12 @@ public abstract class BaseRestController {
                     requestUri,
                     HttpMethod.GET,
                     new HttpEntity<>(null, buildRequestHeaders()), String.class);
-            return (response.getBody().contains("@"));
+            if (response.hasBody()) {
+                return (response.getBody().contains("@"));
+            } else {
+                return false;
+            }
+
         } catch (HttpStatusCodeException e) {
             return false;
         }
