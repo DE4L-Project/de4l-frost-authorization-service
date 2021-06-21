@@ -48,7 +48,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .jwt()
                 .jwtAuthenticationConverter(jwtAuthenticationConverter());
 
-         this.routePermissionsConfiguration.configureHttpSecurityPermissions(httpSecurity);
+         // this.routePermissionsConfiguration.configureHttpSecurityPermissions(httpSecurity);
     }
 
     JwtAuthenticationConverter jwtAuthenticationConverter() {

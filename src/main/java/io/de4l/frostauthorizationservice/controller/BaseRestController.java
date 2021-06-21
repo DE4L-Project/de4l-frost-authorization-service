@@ -2,6 +2,7 @@ package io.de4l.frostauthorizationservice.controller;
 
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.StaEntity;
+import io.de4l.frostauthorizationservice.model.Thing;
 import io.de4l.frostauthorizationservice.security.KeycloakUser;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
@@ -70,8 +71,15 @@ public abstract class BaseRestController {
     // TODO: Try catch 'Not Found' error from Frost
     protected  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {
         var keycloakUser = new KeycloakUser(token);
-        if (!keycloakUser.isAdmin())
-            return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+        if (!keycloakUser.isAdmin()) {
+            if (staEntity.getClass().equals(Thing.class)) {
+                return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+            } else {
+                if (!isPrincipalTheThingOwner(request.getRequestURI(), keycloakUser.getUserId())) {
+                    return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+                }
+            }
+        }
         ResponseEntity<String> response = restTemplate.exchange(
                 buildUnfilteredUri(request.getRequestURI(), ""),
                 HttpMethod.POST,
@@ -98,15 +106,16 @@ public abstract class BaseRestController {
         }
     }
 
-    // TODO: Test whether the check is sufficient!
+    // TODO: Validate check!
     protected boolean isPrincipalTheThingOwner(String requestUriString, String principalId) {
         try {
             var requestUri = buildOwnerRequestUri(requestUriString, principalId);
+            System.out.println(requestUri);
             ResponseEntity<String> response = restTemplate.exchange(
                     requestUri,
                     HttpMethod.GET,
                     new HttpEntity<>(null, buildRequestHeaders()), String.class);
-            return (response.getStatusCode().is2xxSuccessful());
+            return (response.getBody().contains("@"));
         } catch (HttpStatusCodeException e) {
             return false;
         }

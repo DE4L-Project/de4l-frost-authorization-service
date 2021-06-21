@@ -37,7 +37,6 @@ public class ThingsController extends BaseRestController {
         return performUpdateRequest(request, token, body);
     }
 
-    // Accessible to admin only via Spring Security
     @PostMapping(value = "Things", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> createThing(
             @RequestBody String body,

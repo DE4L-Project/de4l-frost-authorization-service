@@ -24,8 +24,7 @@ public class ObservationsController extends BaseRestController {
         return performReadRequest(request, token, expand);
     }
 
-    // TODO: Currently, accessible to admin only via Spring Security. This needs to be changed.
-    @PostMapping(value = "Observation", consumes = "application/json", produces = "application/json")
+    @PostMapping(value = "Datastreams({id})/Observations", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> createObservation(
             @RequestBody String body,
             JwtAuthenticationToken token,
