@@ -24,4 +24,23 @@ public class DatastreamsController extends BaseRestController {
         return performReadRequest(request, token, expand);
     }
 
+    @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.PATCH},
+            value = "Datastreams({id})", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> updateDatastream(
+            @RequestBody String body,
+            JwtAuthenticationToken token,
+            HttpServletRequest request
+    ) {
+        return performUpdateRequest(request, token, body);
+    }
+
+    @PostMapping(value = "Datastreams", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> createDatastream(
+            @RequestBody String body,
+            JwtAuthenticationToken token,
+            HttpServletRequest request
+    ) {
+        return performCreateRequest(request, token, body);
+    }
+
 }

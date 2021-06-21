@@ -27,7 +27,9 @@ import java.net.URI;
 public abstract class BaseRestController {
     protected final SensorThingsServiceProperties sensorThingsServiceProperties;
     protected final StaEntity staEntity;
-    private final String UNAUTHORIZED_MESSAGE = "Unauthorized";
+    private final ResponseEntity UNAUTHORIZED = new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+    private final ResponseEntity NOTHING_FOUND = new ResponseEntity<>("Nothing found", HttpStatus.NOT_FOUND);
+
     private static final String FILTER = "$filter";
 
     @Autowired
@@ -44,7 +46,6 @@ public abstract class BaseRestController {
         return new ResponseEntity<>(e.getResponseBodyAsString(), getErrorHttpHeaders(), e.getStatusCode());
     }
 
-    // TODO: Try catch 'Not Found' error from Frost
     protected ResponseEntity<String> performReadRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
         URI requestUri;
         if (token == null) {
@@ -61,22 +62,26 @@ public abstract class BaseRestController {
                 requestUri = this.buildPrivateRequestUri(request.getRequestURI(), keycloakUser.getUserId(), expand);
             }
         }
-        ResponseEntity<String> response = restTemplate.exchange(
-                requestUri,
-                HttpMethod.GET,
-                new HttpEntity<String>(null, buildRequestHeaders()), String.class);
-        return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    requestUri,
+                    HttpMethod.GET,
+                    new HttpEntity<String>(null, buildRequestHeaders()), String.class);
+            return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+        } catch (HttpStatusCodeException e) {
+            return NOTHING_FOUND;
+        }
     }
 
-    // TODO: Try catch 'Not Found' error from Frost
+    // TODO: Try catch 'Not Found' error from Frost ?
     protected  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {
         var keycloakUser = new KeycloakUser(token);
         if (!keycloakUser.isAdmin()) {
             if (staEntity.getClass().equals(Thing.class)) {
-                return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+                return UNAUTHORIZED;
             } else {
                 if (!isPrincipalTheThingOwner(request.getRequestURI(), keycloakUser.getUserId())) {
-                    return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+                    return NOTHING_FOUND;
                 }
             }
         }
@@ -89,7 +94,7 @@ public abstract class BaseRestController {
 
     protected ResponseEntity<String> performUpdateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) throws RestClientException {
         if (token == null) {
-            return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+            return UNAUTHORIZED;
         }
         // Check whether requested resource references to the Keycloak id as it's thing owner
         var keycloakUser = new KeycloakUser(token);
@@ -102,7 +107,7 @@ public abstract class BaseRestController {
                     new HttpEntity<>(body, buildRequestHeaders()), String.class);
             return new ResponseEntity<>(response.getBody(), response.getStatusCode());
         } else {
-            return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+            return NOTHING_FOUND;
         }
     }
 

@@ -26,7 +26,7 @@ public class ObservationsController extends BaseRestController {
 
     @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.PATCH},
             value = "Observations({id})", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<String> updateThing(
+    public ResponseEntity<String> updateObservation(
             @RequestBody String body,
             JwtAuthenticationToken token,
             HttpServletRequest request
