@@ -10,11 +10,13 @@ import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Getter
 public class KeycloakUser implements Principal {
+
     private final static String USER_ID_KEY = "sub";
     private final static String USER_PREFERRED_USERNAME_KEY = "preferred_username";
+    // TODO: @Value("${security.admin.role}")
+    private final String ROLE_ADMIN = "frost_admin";
 
     @JsonIgnore
     private final JwtAuthenticationToken jwtAuthenticationToken;
@@ -44,4 +46,7 @@ public class KeycloakUser implements Principal {
     }
 
 
+    public boolean isAdmin() {
+        return getRealmRoles().contains("ROLE_" + ROLE_ADMIN);
+    }
 }

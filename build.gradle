@@ -26,6 +26,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5'
+
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: '2.10.2'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.2'
 

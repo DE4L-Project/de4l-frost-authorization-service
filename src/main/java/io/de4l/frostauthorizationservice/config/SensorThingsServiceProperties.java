@@ -1,4 +1,4 @@
-package io.de4l.frostauthorizationservice.frost;
+package io.de4l.frostauthorizationservice.config;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;

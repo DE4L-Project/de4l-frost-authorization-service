@@ -1,16 +1,18 @@
 package io.de4l.frostauthorizationservice.controller;
 
-import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
+import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.StaEntity;
 import io.de4l.frostauthorizationservice.security.KeycloakUser;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -24,6 +26,11 @@ import java.net.URI;
 public abstract class BaseRestController {
     protected final SensorThingsServiceProperties sensorThingsServiceProperties;
     protected final StaEntity staEntity;
+    private final String UNAUTHORIZED_MESSAGE = "Unauthorized";
+    private static final String FILTER = "$filter";
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     protected BaseRestController(SensorThingsServiceProperties sensorThingsServiceProperties, StaEntity staEntity) {
         this.sensorThingsServiceProperties = sensorThingsServiceProperties;
@@ -36,25 +43,74 @@ public abstract class BaseRestController {
         return new ResponseEntity<>(e.getResponseBodyAsString(), getErrorHttpHeaders(), e.getStatusCode());
     }
 
-    protected String performReadRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
+    // TODO: Try catch 'Not Found' error from Frost
+    protected ResponseEntity<String> performReadRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
         URI requestUri;
         if (token == null) {
             // Public Request
-            requestUri = this.buildUnauthorizedRequestUrl(request, expand);
+            requestUri = this.buildPublicRequestUrl(request.getRequestURI(), expand);
         } else {
             // Potential authenticated Request
             var keycloakUser = new KeycloakUser(token);
-            requestUri = this.buildAuthorizedRequestUri(request, keycloakUser.getUserId(), expand);
+            if (keycloakUser.isAdmin()) {
+                // Admin request
+                requestUri = this.buildUnfilteredUri(request.getRequestURI(), expand);
+            } else {
+                // Consumer/Owner request
+                requestUri = this.buildPrivateRequestUri(request.getRequestURI(), keycloakUser.getUserId(), expand);
+            }
         }
-
-        var restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(
                 requestUri,
                 HttpMethod.GET,
                 new HttpEntity<String>(null, buildRequestHeaders()), String.class);
-        return response.getBody();
+        return new ResponseEntity<>(response.getBody(), response.getStatusCode());
     }
 
+    // TODO: Try catch 'Not Found' error from Frost
+    protected  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {
+        var keycloakUser = new KeycloakUser(token);
+        if (!keycloakUser.isAdmin())
+            return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+        ResponseEntity<String> response = restTemplate.exchange(
+                buildUnfilteredUri(request.getRequestURI(), ""),
+                HttpMethod.POST,
+                new HttpEntity<>(body, buildRequestHeaders()), String.class);
+        return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+    }
+
+    protected ResponseEntity<String> performUpdateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) throws RestClientException {
+        if (token == null) {
+            return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+        }
+        // Check whether requested resource references to the Keycloak id as it's thing owner
+        var keycloakUser = new KeycloakUser(token);
+        if (keycloakUser.isAdmin()
+                || isPrincipalTheThingOwner(request.getRequestURI(), keycloakUser.getUserId())) {
+            var requestUri = buildUnfilteredUri(request.getRequestURI(), "");
+            var response = restTemplate.exchange(
+                    requestUri,
+                    HttpMethod.valueOf(request.getMethod()),
+                    new HttpEntity<>(body, buildRequestHeaders()), String.class);
+            return new ResponseEntity<>(response.getBody(), response.getStatusCode());
+        } else {
+            return new ResponseEntity<>(UNAUTHORIZED_MESSAGE, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    // TODO: Test whether the check is sufficient!
+    protected boolean isPrincipalTheThingOwner(String requestUriString, String principalId) {
+        try {
+            var requestUri = buildOwnerRequestUri(requestUriString, principalId);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    requestUri,
+                    HttpMethod.GET,
+                    new HttpEntity<>(null, buildRequestHeaders()), String.class);
+            return (response.getStatusCode().is2xxSuccessful());
+        } catch (HttpStatusCodeException e) {
+            return false;
+        }
+    }
 
     protected HttpHeaders buildRequestHeaders() {
         var headers = new HttpHeaders();
@@ -62,20 +118,36 @@ public abstract class BaseRestController {
         return headers;
     }
 
-    protected URI buildAuthorizedRequestUri(HttpServletRequest request, String userId, String expand) {
-        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI());
-        uriComponentsBuilder.queryParam("$filter", buildOwnerFilter(userId) + " or " + buildPublicFilter() + " or " + buildConsumerFilter(userId));
+    protected URI buildUnfilteredUri(String requestUri, String expand) {
+        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
 
         if (Strings.isNotBlank(expand)) {
-            uriComponentsBuilder.queryParam("$expand", expand);
+            uriComponentsBuilder.queryParam(FILTER, expand);
+        }
+        return uriComponentsBuilder.build().toUri();
+
+    }
+
+    protected URI buildOwnerRequestUri(String requestUri, String userId) {
+        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
+        uriComponentsBuilder.queryParam(FILTER, buildOwnerFilter(userId));
+        return uriComponentsBuilder.build().toUri();
+    }
+
+    protected URI buildPrivateRequestUri(String requestUri, String userId, String expand) {
+        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
+        uriComponentsBuilder.queryParam(FILTER, buildOwnerFilter(userId) + " or " + buildPublicFilter() + " or " + buildConsumerFilter(userId));
+
+        if (Strings.isNotBlank(expand)) {
+            uriComponentsBuilder.queryParam(FILTER, expand);
         }
 
         return uriComponentsBuilder.build().toUri();
     }
 
-    protected URI buildUnauthorizedRequestUrl(HttpServletRequest request, String expand) {
-        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + request.getRequestURI());
-        uriComponentsBuilder.queryParam("$filter",buildPublicFilter());
+    protected URI buildPublicRequestUrl(String requestUri, String expand) {
+        var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
+        uriComponentsBuilder.queryParam(FILTER, buildPublicFilter());
 
         if (Strings.isNotBlank(expand)) {
             uriComponentsBuilder.queryParam("$expand", expand);

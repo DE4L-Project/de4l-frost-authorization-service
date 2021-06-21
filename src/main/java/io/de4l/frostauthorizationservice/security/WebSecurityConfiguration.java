@@ -4,7 +4,9 @@ package io.de4l.frostauthorizationservice.security;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -20,7 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @Log4j2
 @ConditionalOnProperty(prefix = "app.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
@@ -44,7 +48,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .jwt()
                 .jwtAuthenticationConverter(jwtAuthenticationConverter());
 
-        // this.routePermissionsConfiguration.configureHttpSecurityPermissions(httpSecurity);
+         this.routePermissionsConfiguration.configureHttpSecurityPermissions(httpSecurity);
     }
 
     JwtAuthenticationConverter jwtAuthenticationConverter() {
@@ -54,6 +58,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 List<String> roles = realmAccess.get("roles");
                 if (roles != null) {
                     return roles.stream()
+                            .map(roleName -> "ROLE_" + roleName)
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
                 }
