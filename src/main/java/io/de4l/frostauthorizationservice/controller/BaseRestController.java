@@ -27,8 +27,8 @@ import java.net.URI;
 public abstract class BaseRestController {
     protected final SensorThingsServiceProperties sensorThingsServiceProperties;
     protected final StaEntity staEntity;
-    private final ResponseEntity UNAUTHORIZED = new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
-    private final ResponseEntity NOTHING_FOUND = new ResponseEntity<>("Nothing found", HttpStatus.NOT_FOUND);
+    private final ResponseEntity<String> UNAUTHORIZED = new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+    private final ResponseEntity<String> NOTHING_FOUND = new ResponseEntity<>("Nothing found", HttpStatus.NOT_FOUND);
 
     private static final String FILTER = "$filter";
 
@@ -73,7 +73,6 @@ public abstract class BaseRestController {
         }
     }
 
-    // TODO: Try catch 'Not Found' error from Frost ?
     protected  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {
         var keycloakUser = new KeycloakUser(token);
         if (!keycloakUser.isAdmin()) {
@@ -96,7 +95,7 @@ public abstract class BaseRestController {
         if (token == null) {
             return UNAUTHORIZED;
         }
-        // Check whether requested resource references to the Keycloak id as it's thing owner
+        // Check whether requested resource references to the Keycloak id as it's Thing owner
         var keycloakUser = new KeycloakUser(token);
         if (keycloakUser.isAdmin()
                 || isPrincipalTheThingOwner(request.getRequestURI(), keycloakUser.getUserId())) {
@@ -115,7 +114,6 @@ public abstract class BaseRestController {
     protected boolean isPrincipalTheThingOwner(String requestUriString, String principalId) {
         try {
             var requestUri = buildOwnerRequestUri(requestUriString, principalId);
-            System.out.println(requestUri);
             ResponseEntity<String> response = restTemplate.exchange(
                     requestUri,
                     HttpMethod.GET,
