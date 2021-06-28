@@ -1,5 +1,6 @@
 package io.de4l.frostauthorizationservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Thing;
 import lombok.extern.log4j.Log4j2;
@@ -14,8 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 @CrossOrigin(origins = "*")
 public class ThingsController extends BaseRestController {
 
-    public ThingsController(SensorThingsServiceProperties sensorThingsServiceProperties) {
-        super(sensorThingsServiceProperties, new Thing());
+    public ThingsController(SensorThingsServiceProperties sensorThingsServiceProperties, ObjectMapper objectMapper) {
+        super(sensorThingsServiceProperties, new Thing(), objectMapper);
     }
 
     @GetMapping(value = {"Things", "Things({id})", "Datastreams({id})/Thing"}, produces = "application/json")

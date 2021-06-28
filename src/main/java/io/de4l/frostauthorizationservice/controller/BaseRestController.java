@@ -1,5 +1,8 @@
 package io.de4l.frostauthorizationservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.StaEntity;
 import io.de4l.frostauthorizationservice.model.Thing;
@@ -9,6 +12,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +24,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.List;
 
 @RequestMapping(path = "/FROST-Server/v1.0/")
 @CrossOrigin(origins = "*")
@@ -29,15 +34,17 @@ public abstract class BaseRestController {
     protected final StaEntity staEntity;
     private final ResponseEntity<String> UNAUTHORIZED = new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
     private final ResponseEntity<String> NOTHING_FOUND = new ResponseEntity<>("Nothing found", HttpStatus.NOT_FOUND);
+    private final ObjectMapper objectMapper;
 
     private static final String FILTER = "$filter";
 
     @Autowired
     private RestTemplate restTemplate;
 
-    protected BaseRestController(SensorThingsServiceProperties sensorThingsServiceProperties, StaEntity staEntity) {
+    protected BaseRestController(SensorThingsServiceProperties sensorThingsServiceProperties, StaEntity staEntity, ObjectMapper objectMapper) {
         this.sensorThingsServiceProperties = sensorThingsServiceProperties;
         this.staEntity = staEntity;
+        this.objectMapper = objectMapper;
     }
 
     @ExceptionHandler(HttpClientErrorException.class)
@@ -67,10 +74,31 @@ public abstract class BaseRestController {
                     requestUri,
                     HttpMethod.GET,
                     new HttpEntity<String>(null, buildRequestHeaders()), String.class);
-            return new ResponseEntity<>(response.getBody(), response.getStatusCode());
-        } catch (HttpStatusCodeException e) {
+            var cleanedResponse = removeFilterFromResponse(response.getBody());
+            return new ResponseEntity<>(cleanedResponse, response.getStatusCode());
+        } catch (HttpStatusCodeException | JsonProcessingException e) {
             return NOTHING_FOUND;
         }
+    }
+
+    protected String removeFilterFromResponse(String response) throws JsonProcessingException {
+        final var NEXT_LINK = "@iot.nextLink";
+        var jsonNode = objectMapper.readTree(response);
+        var nextLink = jsonNode.at("/" + NEXT_LINK).asText();
+        MultiValueMap<String, String> parameters =
+                UriComponentsBuilder.fromUriString(nextLink).build().getQueryParams();
+        List<String> filterParameters = parameters.get(FILTER);
+        if (filterParameters == null) {
+            return response;
+        }
+        var nextLinkCleaned = nextLink
+                .replace("&"+FILTER+"=", "")
+                .replace(filterParameters.toString().
+                        replace("[", "")
+                        .replace("]", ""), "");
+        ObjectNode resultNode = (ObjectNode) jsonNode;
+        resultNode.put(NEXT_LINK, nextLinkCleaned);
+        return resultNode.toPrettyString();
     }
 
     protected  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {

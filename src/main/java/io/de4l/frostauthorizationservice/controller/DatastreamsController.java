@@ -1,5 +1,6 @@
 package io.de4l.frostauthorizationservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Datastream;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 public class DatastreamsController extends BaseRestController {
 
-    public DatastreamsController(SensorThingsServiceProperties sensorThingsServiceProperties) {
-        super(sensorThingsServiceProperties, new Datastream());
+    public DatastreamsController(SensorThingsServiceProperties sensorThingsServiceProperties, ObjectMapper objectMapper) {
+        super(sensorThingsServiceProperties, new Datastream(), objectMapper);
     }
 
     @GetMapping(value = {"Datastreams({id})", "Datastreams", "Things({id})/Datastreams"}, produces = "application/json")
