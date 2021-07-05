@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.StaEntity;
 import io.de4l.frostauthorizationservice.model.Thing;
-import io.de4l.frostauthorizationservice.security.KeycloakUser;
+import io.de4l.frostauthorizationservice.security.KeycloakUtils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,16 +35,17 @@ public abstract class BaseRestController {
     private final ResponseEntity<String> UNAUTHORIZED = new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
     private final ResponseEntity<String> NOTHING_FOUND = new ResponseEntity<>("Nothing found", HttpStatus.NOT_FOUND);
     private final ObjectMapper objectMapper;
-
+    protected final KeycloakUtils keycloakUtils;
     private static final String FILTER = "$filter";
 
     @Autowired
     private RestTemplate restTemplate;
 
-    protected BaseRestController(SensorThingsServiceProperties sensorThingsServiceProperties, StaEntity staEntity, ObjectMapper objectMapper) {
+    protected BaseRestController(SensorThingsServiceProperties sensorThingsServiceProperties, StaEntity staEntity, ObjectMapper objectMapper, KeycloakUtils keycloakUtils) {
         this.sensorThingsServiceProperties = sensorThingsServiceProperties;
         this.staEntity = staEntity;
         this.objectMapper = objectMapper;
+        this.keycloakUtils = keycloakUtils;
     }
 
     @ExceptionHandler(HttpClientErrorException.class)
@@ -53,20 +54,19 @@ public abstract class BaseRestController {
         return new ResponseEntity<>(e.getResponseBodyAsString(), getErrorHttpHeaders(), e.getStatusCode());
     }
 
-    protected ResponseEntity<String> performReadRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
+    public ResponseEntity<String> performReadRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
         URI requestUri;
         if (token == null) {
             // Public Request
             requestUri = this.buildPublicRequestUrl(request.getRequestURI(), expand);
         } else {
             // Potential authenticated Request
-            var keycloakUser = new KeycloakUser(token);
-            if (keycloakUser.isAdmin()) {
+            if (keycloakUtils.isAdmin()) {
                 // Admin request
                 requestUri = this.buildUnfilteredUri(request.getRequestURI(), expand);
             } else {
                 // Consumer/Owner request
-                requestUri = this.buildPrivateRequestUri(request.getRequestURI(), keycloakUser.getUserId(), expand);
+                requestUri = this.buildPrivateRequestUri(request.getRequestURI(), keycloakUtils.getName(), expand);
             }
         }
         try {
@@ -81,7 +81,7 @@ public abstract class BaseRestController {
         }
     }
 
-    protected String removeFilterFromResponse(String response) throws JsonProcessingException {
+    public String removeFilterFromResponse(String response) throws JsonProcessingException {
         final var NEXT_LINK = "@iot.nextLink";
         var jsonNode = objectMapper.readTree(response);
         var nextLink = jsonNode.at("/" + NEXT_LINK).asText();
@@ -101,13 +101,12 @@ public abstract class BaseRestController {
         return resultNode.toPrettyString();
     }
 
-    protected  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {
-        var keycloakUser = new KeycloakUser(token);
-        if (!keycloakUser.isAdmin()) {
+    public  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {
+        if (!keycloakUtils.isAdmin()) {
             if (staEntity.getClass().equals(Thing.class)) {
                 return UNAUTHORIZED;
             } else {
-                if (!isPrincipalTheThingOwner(request.getRequestURI(), keycloakUser.getUserId())) {
+                if (!isPrincipalTheThingOwner(request.getRequestURI(), keycloakUtils.getName())) {
                     return NOTHING_FOUND;
                 }
             }
@@ -119,14 +118,13 @@ public abstract class BaseRestController {
         return new ResponseEntity<>(response.getBody(), response.getStatusCode());
     }
 
-    protected ResponseEntity<String> performUpdateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) throws RestClientException {
+    public ResponseEntity<String> performUpdateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) throws RestClientException {
         if (token == null) {
             return UNAUTHORIZED;
         }
         // Check whether requested resource references to the Keycloak id as it's Thing owner
-        var keycloakUser = new KeycloakUser(token);
-        if (keycloakUser.isAdmin()
-                || isPrincipalTheThingOwner(request.getRequestURI(), keycloakUser.getUserId())) {
+        if (keycloakUtils.isAdmin()
+                || isPrincipalTheThingOwner(request.getRequestURI(), keycloakUtils.getName())) {
             var requestUri = buildUnfilteredUri(request.getRequestURI(), "");
             var response = restTemplate.exchange(
                     requestUri,
@@ -138,7 +136,7 @@ public abstract class BaseRestController {
         }
     }
 
-    protected boolean isPrincipalTheThingOwner(String requestUriString, String principalId) {
+    public boolean isPrincipalTheThingOwner(String requestUriString, String principalId) {
         try {
             var requestUri = buildOwnerRequestUri(requestUriString, principalId);
             ResponseEntity<String> response = restTemplate.exchange(
@@ -156,13 +154,13 @@ public abstract class BaseRestController {
         }
     }
 
-    protected HttpHeaders buildRequestHeaders() {
+    public HttpHeaders buildRequestHeaders() {
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
 
-    protected URI buildUnfilteredUri(String requestUri, String expand) {
+    public URI buildUnfilteredUri(String requestUri, String expand) {
         var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
 
         if (Strings.isNotBlank(expand)) {
@@ -172,13 +170,13 @@ public abstract class BaseRestController {
 
     }
 
-    protected URI buildOwnerRequestUri(String requestUri, String userId) {
+    public URI buildOwnerRequestUri(String requestUri, String userId) {
         var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
         uriComponentsBuilder.queryParam(FILTER, buildOwnerFilter(userId));
         return uriComponentsBuilder.build().toUri();
     }
 
-    protected URI buildPrivateRequestUri(String requestUri, String userId, String expand) {
+    public URI buildPrivateRequestUri(String requestUri, String userId, String expand) {
         var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
         uriComponentsBuilder.queryParam(FILTER, buildOwnerFilter(userId) + " or " + buildPublicFilter() + " or " + buildConsumerFilter(userId));
 
@@ -189,7 +187,7 @@ public abstract class BaseRestController {
         return uriComponentsBuilder.build().toUri();
     }
 
-    protected URI buildPublicRequestUrl(String requestUri, String expand) {
+    public URI buildPublicRequestUrl(String requestUri, String expand) {
         var uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
         uriComponentsBuilder.queryParam(FILTER, buildPublicFilter());
 
@@ -200,21 +198,21 @@ public abstract class BaseRestController {
         return uriComponentsBuilder.build().toUri();
     }
 
-    private HttpHeaders getErrorHttpHeaders() {
+    public HttpHeaders getErrorHttpHeaders() {
         var httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return httpHeaders;
     }
 
-    private String buildOwnerFilter(String userId) {
+    public String buildOwnerFilter(String userId) {
         return String.format("%s/%s eq '%s'", staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getOwnerProperty(), userId);
     }
 
-    private String buildPublicFilter() {
+    public String buildPublicFilter() {
         return String.format("%s/%s eq 'true'", staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getPublicProperty());
     }
 
-    private String buildConsumerFilter(String userId) {
+    public String buildConsumerFilter(String userId) {
         return String.format("substringOf('\"%s\"',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getConsumerProperty());
     }
 

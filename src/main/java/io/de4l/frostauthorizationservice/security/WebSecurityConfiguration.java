@@ -2,8 +2,6 @@
 package io.de4l.frostauthorizationservice.security;
 
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -26,20 +24,11 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @Log4j2
-@ConditionalOnProperty(prefix = "app.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-    private final RoutePermissionsConfiguration routePermissionsConfiguration;
-
-    @Autowired
-    public WebSecurityConfiguration(RoutePermissionsConfiguration routePermissionsConfiguration) {
-        this.routePermissionsConfiguration = routePermissionsConfiguration;
-    }
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-//                .addFilterBefore(new CustomCorsFilter(), SessionManagementFilter.class)
                 .cors()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -47,8 +36,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .oauth2ResourceServer()
                 .jwt()
                 .jwtAuthenticationConverter(jwtAuthenticationConverter());
-
-         // this.routePermissionsConfiguration.configureHttpSecurityPermissions(httpSecurity);
     }
 
     JwtAuthenticationConverter jwtAuthenticationConverter() {

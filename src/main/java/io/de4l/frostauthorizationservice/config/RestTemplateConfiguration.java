@@ -1,4 +1,4 @@
-package io.de4l.frostauthorizationservice.utility;
+package io.de4l.frostauthorizationservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 
 @Component
-public class RestTemplateBuild {
+public class RestTemplateConfiguration {
 
     @Bean
     public RestTemplate restTemplate(org.springframework.boot.web.client.RestTemplateBuilder builder) {

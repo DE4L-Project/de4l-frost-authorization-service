@@ -3,6 +3,7 @@ package io.de4l.frostauthorizationservice.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Observation;
+import io.de4l.frostauthorizationservice.security.KeycloakUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 public class ObservationsController extends BaseRestController {
 
-    public ObservationsController(SensorThingsServiceProperties sensorThingsServiceProperties, ObjectMapper objectMapper) {
-        super(sensorThingsServiceProperties, new Observation(), objectMapper);
+    public ObservationsController(SensorThingsServiceProperties sensorThingsServiceProperties, ObjectMapper objectMapper, KeycloakUtils keycloakUtils) {
+        super(sensorThingsServiceProperties, new Observation(), objectMapper, keycloakUtils);
     }
 
     @GetMapping(value = {"Observations", "Observations({id})", "Datastreams({id})/Observations"}, produces = "application/json")
