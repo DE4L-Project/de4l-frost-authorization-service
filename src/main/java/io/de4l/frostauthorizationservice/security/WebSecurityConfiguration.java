@@ -45,7 +45,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 List<String> roles = realmAccess.get("roles");
                 if (roles != null) {
                     return roles.stream()
-                            .map(roleName -> "ROLE_" + roleName)
+                            // .map(roleName -> "ROLE_" + roleName)
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
                 }

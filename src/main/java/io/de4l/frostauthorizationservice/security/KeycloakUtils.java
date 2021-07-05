@@ -24,7 +24,6 @@ public class KeycloakUtils {
                 .collect(Collectors.toList());
     }
 
-
     public boolean isAdmin() {
         return getRealmRoles().contains(ROLE_ADMIN);
     }

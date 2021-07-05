@@ -55,7 +55,7 @@ public abstract class BaseRestController {
 
     public ResponseEntity<String> performReadRequest(HttpServletRequest request, String expand) throws RestClientException {
         URI requestUri;
-        if (!keycloakUtils.isNotAuthenticated()) {
+        if (keycloakUtils.isNotAuthenticated()) {
             // Public Request
             requestUri = this.buildPublicRequestUrl(request.getRequestURI(), expand);
         } else {
@@ -212,7 +212,7 @@ public abstract class BaseRestController {
     }
 
     public String buildConsumerFilter(String userId) {
-        return String.format("substringOf('\"%s\"',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getConsumerProperty());
+        return String.format("substringOf('%s',%s/%s)", userId, staEntity.getThingPropertyPath(), sensorThingsServiceProperties.getConsumerProperty());
     }
 
 
