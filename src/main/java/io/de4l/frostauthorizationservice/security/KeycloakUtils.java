@@ -14,6 +14,9 @@ public class KeycloakUtils {
     @Value("${app.sta.keycloakAdminRole}")
     private String ROLE_ADMIN;
 
+    public boolean isNotAuthenticated() {
+        return !SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
+    }
 
     public List<String> getRealmRoles() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()

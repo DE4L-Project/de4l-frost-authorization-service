@@ -11,7 +11,6 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,9 +53,9 @@ public abstract class BaseRestController {
         return new ResponseEntity<>(e.getResponseBodyAsString(), getErrorHttpHeaders(), e.getStatusCode());
     }
 
-    public ResponseEntity<String> performReadRequest(HttpServletRequest request, JwtAuthenticationToken token, String expand) throws RestClientException {
+    public ResponseEntity<String> performReadRequest(HttpServletRequest request, String expand) throws RestClientException {
         URI requestUri;
-        if (token == null) {
+        if (!keycloakUtils.isNotAuthenticated()) {
             // Public Request
             requestUri = this.buildPublicRequestUrl(request.getRequestURI(), expand);
         } else {
@@ -101,7 +100,7 @@ public abstract class BaseRestController {
         return resultNode.toPrettyString();
     }
 
-    public  ResponseEntity<String> performCreateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) {
+    public  ResponseEntity<String> performCreateRequest(HttpServletRequest request, String body) {
         if (!keycloakUtils.isAdmin()) {
             if (staEntity.getClass().equals(Thing.class)) {
                 return UNAUTHORIZED;
@@ -118,8 +117,8 @@ public abstract class BaseRestController {
         return new ResponseEntity<>(response.getBody(), response.getStatusCode());
     }
 
-    public ResponseEntity<String> performUpdateRequest(HttpServletRequest request, JwtAuthenticationToken token, String body) throws RestClientException {
-        if (token == null) {
+    public ResponseEntity<String> performUpdateRequest(HttpServletRequest request, String body) throws RestClientException {
+        if (keycloakUtils.isNotAuthenticated()) {
             return UNAUTHORIZED;
         }
         // Check whether requested resource references to the Keycloak id as it's Thing owner
