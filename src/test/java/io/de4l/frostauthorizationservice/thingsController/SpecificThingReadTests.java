@@ -8,10 +8,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -33,20 +36,21 @@ class SpecificThingReadTests {
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
-	public void getSpecificThing_AdminRoleAndThingNotPublic_OK() throws Exception {
+	void getSpecificThing_AdminRoleAndThingNotPublic_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITHOUT_PROPERTIES))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP025 - Wörth-Marktplatz")));
 	}
 
 	@Test
 	@WithMockUser(username = "user", authorities = {})
-	public void getSpecificThing_NotAdminAndThingNotPublic_OK() throws Exception {
+	void getSpecificThing_NotAdminAndThingNotPublic_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITHOUT_PROPERTIES))
 				.andExpect(status().isNotFound());
 	}
 
 	@Test
-	public void getSpecificThing_NotAuthenticatedAndThingNotPublic_NotFound() throws Exception {
+	void getSpecificThing_NotAuthenticatedAndThingNotPublic_NotFound() throws Exception {
 		this.mockMvc.perform(get(THING_WITHOUT_PROPERTIES))
 				.andExpect(status().isNotFound());
 	}
@@ -55,42 +59,47 @@ class SpecificThingReadTests {
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
-	public void getSpecificThing_AdminRoleAndThingPublic_OK() throws Exception {
+	void getSpecificThing_AdminRoleAndThingPublic_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_PUBLIC))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP024 - Koblenz-Friedrich-Ebert-Ring")));
 	}
 
 	@Test
 	@WithMockUser(username = "user", authorities = {})
-	public void getSpecificThing_NotAdminAndThingPublic_OK() throws Exception {
+	void getSpecificThing_NotAdminAndThingPublic_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_PUBLIC))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP024 - Koblenz-Friedrich-Ebert-Ring")));
 	}
 
 	@Test
-	public void getSpecificThing_NotAuthenticatedAndThingPublic_OK() throws Exception {
+	void getSpecificThing_NotAuthenticatedAndThingPublic_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_PUBLIC))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP024 - Koblenz-Friedrich-Ebert-Ring")));
 	}
 
 	// THINGS WITH OWNER
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
-	public void getSpecificThing_AdminRoleAndWithThingOwner_OK() throws Exception {
+	void getSpecificThing_AdminRoleAndWithThingOwner_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_OWNER))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP023 - Worms-Hagenstraße")));
 	}
 
 	@Test
 	@WithMockUser(username = "user", authorities = {})
-	public void getSpecificThing_ThingOwnerAndWithThingOwner_OK() throws Exception {
+	void getSpecificThing_ThingOwnerAndWithThingOwner_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_OWNER))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP023 - Worms-Hagenstraße")));
 	}
 
 	@Test
-	public void getSpecificThing_NotAuthenticatedAndWithThingOwner_OK() throws Exception {
+	void getSpecificThing_NotAuthenticatedAndWithThingOwner_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_OWNER))
 				.andExpect(status().isNotFound());
 	}
@@ -99,20 +108,22 @@ class SpecificThingReadTests {
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
-	public void getSpecificThing_AdminRoleAndWithThingConsumer_OK() throws Exception {
+	void getSpecificThing_AdminRoleAndWithThingConsumer_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_CONSUMER))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP022 - Bad Kreuznach-Bosenheimer Straße")));
 	}
 
 	@Test
 	@WithMockUser(username = "user", authorities = {})
-	public void getSpecificThing_ThingOwnerAndWithThingConsumer_OK() throws Exception {
+	void getSpecificThing_ThingOwnerAndWithThingConsumer_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_CONSUMER))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("name", is("UBA: DERP022 - Bad Kreuznach-Bosenheimer Straße")));
 	}
 
 	@Test
-	public void getSpecificThing_NotAuthenticatedAndWithThingConsumer_OK() throws Exception {
+	void getSpecificThing_NotAuthenticatedAndWithThingConsumer_OK() throws Exception {
 		this.mockMvc.perform(get(THING_WITH_DE4L_CONSUMER))
 				.andExpect(status().isNotFound());
 	}
