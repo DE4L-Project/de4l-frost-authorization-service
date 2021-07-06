@@ -1,6 +1,7 @@
 package io.de4l.frostauthorizationservice.security;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ public class KeycloakUtils {
     private String ROLE_ADMIN;
 
     public boolean isNotAuthenticated() {
-        return !SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
+        return (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken);
     }
 
     public List<String> getRealmRoles() {

@@ -33,7 +33,7 @@ public class DatastreamsController extends BaseRestController {
         return performUpdateRequest(request, body);
     }
 
-    @PostMapping(value = "Datastreams", consumes = "application/json", produces = "application/json")
+    @PostMapping(value = "Things({id})/Datastreams", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> createDatastream(
             @RequestBody String body,
             HttpServletRequest request

@@ -10,7 +10,12 @@ import io.de4l.frostauthorizationservice.security.KeycloakUtils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -80,26 +85,6 @@ public abstract class BaseRestController {
         }
     }
 
-    public String removeFilterFromResponse(String response) throws JsonProcessingException {
-        final var NEXT_LINK = "@iot.nextLink";
-        var jsonNode = objectMapper.readTree(response);
-        var nextLink = jsonNode.at("/" + NEXT_LINK).asText();
-        MultiValueMap<String, String> parameters =
-                UriComponentsBuilder.fromUriString(nextLink).build().getQueryParams();
-        List<String> filterParameters = parameters.get(FILTER);
-        if (filterParameters == null) {
-            return response;
-        }
-        var nextLinkCleaned = nextLink
-                .replace("&"+FILTER+"=", "")
-                .replace(filterParameters.toString().
-                        replace("[", "")
-                        .replace("]", ""), "");
-        ObjectNode resultNode = (ObjectNode) jsonNode;
-        resultNode.put(NEXT_LINK, nextLinkCleaned);
-        return resultNode.toPrettyString();
-    }
-
     public  ResponseEntity<String> performCreateRequest(HttpServletRequest request, String body) {
         if (!keycloakUtils.isAdmin()) {
             if (staEntity.getClass().equals(Thing.class)) {
@@ -133,6 +118,26 @@ public abstract class BaseRestController {
         } else {
             return NOTHING_FOUND;
         }
+    }
+
+    public String removeFilterFromResponse(String response) throws JsonProcessingException {
+        final var NEXT_LINK = "@iot.nextLink";
+        var jsonNode = objectMapper.readTree(response);
+        var nextLink = jsonNode.at("/" + NEXT_LINK).asText();
+        MultiValueMap<String, String> parameters =
+                UriComponentsBuilder.fromUriString(nextLink).build().getQueryParams();
+        List<String> filterParameters = parameters.get(FILTER);
+        if (filterParameters == null) {
+            return response;
+        }
+        var nextLinkCleaned = nextLink
+                .replace("&"+FILTER+"=", "")
+                .replace(filterParameters.toString().
+                        replace("[", "")
+                        .replace("]", ""), "");
+        ObjectNode resultNode = (ObjectNode) jsonNode;
+        resultNode.put(NEXT_LINK, nextLinkCleaned);
+        return resultNode.toPrettyString();
     }
 
     public boolean isPrincipalTheThingOwner(String requestUriString, String principalId) {
