@@ -7,6 +7,7 @@ import io.de4l.frostauthorizationservice.security.KeycloakUtils;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,13 +35,20 @@ public class ThingsController extends BaseRestController {
         return performReadRequest(request, expand);
     }
 
-    @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.PATCH},
+    @RequestMapping(method = {RequestMethod.PUT, RequestMethod.PATCH},
             value = "Things({id})", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> updateThing(
             @RequestBody String body,
             HttpServletRequest request
     ) {
         return performUpdateRequest(request, body);
+    }
+
+    @DeleteMapping(value = "Things({id})", produces = "application/json")
+    public ResponseEntity<String> deleteThing(
+            HttpServletRequest request
+    ) {
+        return performUpdateRequest(request, null);
     }
 
     @PostMapping(value = "Things", consumes = "application/json", produces = "application/json")

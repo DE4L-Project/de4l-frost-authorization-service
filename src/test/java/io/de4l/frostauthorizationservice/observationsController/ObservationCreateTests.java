@@ -23,16 +23,14 @@ class ObservationCreateTests {
 
     private final String PATH_FROST = "/FROST-Server/v1.0/";
     private final String OBSERVATIONS = "/Observations";
+    // associated thing without properties (without de4lPublic -> private)
     private final String OBSERVATION_WITHOUT_PROPERTIES = PATH_FROST + "Datastreams(1)" + OBSERVATIONS;
-    // thing  with property de4lPublic : true
+    // associated thing with property de4lPublic : true
     private final String OBSERVATION_WITH_DE4L_PUBLIC = PATH_FROST + "Datastreams(4)" + OBSERVATIONS;
-    // thing with property de4lOwner : "user"
+    // associated thing with property de4lOwner : "user"
     private final String OBSERVATION_WITH_DE4L_OWNER = PATH_FROST + "Datastreams(8)" + OBSERVATIONS;
-    // thing with property de4lConsumer : ["user3, user, user2"]
+    // associated thing with property de4lConsumer : ["user3, user, user2"]
     private final String OBSERVATION_WITH_DE4L_CONSUMER = PATH_FROST + "Datastreams(11)" + OBSERVATIONS;
-
-
-    // THINGS WITHOUT PROPERTIES
 
     private final String DUMMY_OBSERVATION = """
             {
@@ -40,6 +38,8 @@ class ObservationCreateTests {
               "resultTime" : "2021-02-01T18:01:10.000Z",
               "result" : 12.6
             }""";
+
+    // THINGS WITHOUT PROPERTIES
 
     @Test
     @WithMockUser(username = "admin", authorities = {"frost_admin"})

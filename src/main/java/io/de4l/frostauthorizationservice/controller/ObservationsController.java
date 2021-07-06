@@ -24,13 +24,20 @@ public class ObservationsController extends BaseRestController {
         return performReadRequest(request, expand);
     }
 
-    @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.PATCH},
+    @RequestMapping(method = {RequestMethod.PUT, RequestMethod.PATCH},
             value = "Observations({id})", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> updateObservation(
             @RequestBody String body,
             HttpServletRequest request
     ) {
         return performUpdateRequest(request, body);
+    }
+
+    @DeleteMapping(value = "Observations({id})", produces = "application/json")
+    public ResponseEntity<String> deleteObservation(
+            HttpServletRequest request
+    ) {
+        return performUpdateRequest(request, null);
     }
 
     @PostMapping(value = "Datastreams({id})/Observations", consumes = "application/json", produces = "application/json")

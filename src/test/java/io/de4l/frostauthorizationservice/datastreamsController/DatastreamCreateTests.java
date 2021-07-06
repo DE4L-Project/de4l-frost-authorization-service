@@ -23,8 +23,9 @@ class DatastreamCreateTests {
 
     private final String PATH_FROST = "/FROST-Server/v1.0/";
     private final String DATASTREAMS = "/Datastreams";
+    // associated thing without properties (without de4lPublic -> private)
     private final String DATASTREAM_WITHOUT_PROPERTIES = PATH_FROST + "Things(1)" + DATASTREAMS;
-    // thing  with property de4lPublic : true
+    // thing with property de4lPublic : true
     private final String DATASTREAM_WITH_DE4L_PUBLIC = PATH_FROST + "Things(2)" + DATASTREAMS;
     // thing with property de4lOwner : "user"
     private final String DATASTREAM_WITH_DE4L_OWNER = PATH_FROST + "Things(3)" + DATASTREAMS;

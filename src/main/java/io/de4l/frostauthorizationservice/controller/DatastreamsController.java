@@ -17,20 +17,27 @@ public class DatastreamsController extends BaseRestController {
     }
 
     @GetMapping(value = {"Datastreams({id})", "Datastreams", "Things({id})/Datastreams"}, produces = "application/json")
-    public ResponseEntity<String> specificDatastream(
+    public ResponseEntity<String> getDatastream(
             @RequestParam(value = "$expand", required = false) String expand,
             HttpServletRequest request
     ) {
         return performReadRequest(request, expand);
     }
 
-    @RequestMapping(method = {RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.PATCH},
+    @RequestMapping(method = {RequestMethod.PUT, RequestMethod.PATCH},
             value = "Datastreams({id})", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> updateDatastream(
             @RequestBody String body,
             HttpServletRequest request
     ) {
         return performUpdateRequest(request, body);
+    }
+
+    @DeleteMapping(value = "Datastreams({id})", produces = "application/json")
+    public ResponseEntity<String> deleteDatastream(
+            HttpServletRequest request
+    ) {
+        return performUpdateRequest(request, null);
     }
 
     @PostMapping(value = "Things({id})/Datastreams", consumes = "application/json", produces = "application/json")

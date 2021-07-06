@@ -22,12 +22,13 @@ class DatastreamUpdateTests {
 	private MockMvc mockMvc;
 
 	private final String PATH_FROST = "/FROST-Server/v1.0/";
+	// associated thing without properties (without de4lPublic -> private)
 	private final String DATASTREAM_WITHOUT_PROPERTIES = PATH_FROST + "Datastreams(1)";
-	// thing  with property de4lPublic : true
+	// associated thing with property de4lPublic : true
 	private final String DATASTREAM_WITH_DE4L_PUBLIC = PATH_FROST + "Datastreams(4)";
-	// thing with property de4lOwner : "user"
+	// associated thing with property de4lOwner : "user"
 	private final String DATASTREAM_WITH_DE4L_OWNER = PATH_FROST + "Datastreams(8)";
-	// thing with property de4lConsumer : ["user3, user, user2"]
+	// associated thing with property de4lConsumer : ["user3, user, user2"]
 	private final String DATASTREAM_WITH_DE4L_CONSUMER = PATH_FROST + "Datastreams(11)";
 
 	// DATASTREAMS WITHOUT PROPERTIES

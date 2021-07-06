@@ -1,4 +1,4 @@
-package io.de4l.frostauthorizationservice.thingsController;
+package io.de4l.frostauthorizationservice.observationsController;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,114 +16,114 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
-class ThingReadTests {
+class ObservationReadTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	private final String PATH_FROST = "/FROST-Server/v1.0/";
-	// thing without properties (without de4lPublic -> private)
-	private final String THING_WITHOUT_PROPERTIES = PATH_FROST + "Things(1)";
-	// thing with property de4lPublic : true
-	private final String THING_WITH_DE4L_PUBLIC = PATH_FROST + "Things(2)";
-	// thing with property de4lOwner : "user"
-	private final String THING_WITH_DE4L_OWNER = PATH_FROST + "Things(3)";
-	// thing with property de4lConsumer : ["user3, user, user2"]
-	private final String THING_WITH_DE4L_CONSUMER = PATH_FROST + "Things(4)";
+	// associated thing without properties (without de4lPublic -> private)
+	private final String OBSERVATION_WITHOUT_PROPERTIES = PATH_FROST + "Observations(1)";
+	// associated thing with property de4lPublic : true
+	private final String OBSERVATION_WITH_DE4L_PUBLIC = PATH_FROST + "Observations(6)";
+	// associated thing with property de4lOwner : "user"
+	private final String OBSERVATION_WITH_DE4L_OWNER = PATH_FROST + "Observations(7)";
+	// associated thing with property de4lConsumer : ["user3, user, user2"]
+	private final String OBSERVATION_WITH_DE4L_CONSUMER = PATH_FROST + "Observations(8)";
 
-	// THINGS WITHOUT PROPERTIES
+	// OBSERVATIONS WITHOUT PROPERTIES
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
 	void performReadRequest_AdminAndWithPrivateThing_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITHOUT_PROPERTIES))
+		mockMvc.perform(get(OBSERVATION_WITHOUT_PROPERTIES))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP025 - Wörth-Marktplatz")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
 	@Test
 	@WithMockUser(username = "user")
 	void performReadRequest_UserAndWithPrivateThing_NotFound() throws Exception {
-		mockMvc.perform(get(THING_WITHOUT_PROPERTIES))
+		mockMvc.perform(get(OBSERVATION_WITHOUT_PROPERTIES))
 				.andExpect(status().isNotFound());
 	}
 
 	@Test
 	void performReadRequest_AnonymousAndWithPrivateThing_NotFound() throws Exception {
-		mockMvc.perform(get(THING_WITHOUT_PROPERTIES))
+		mockMvc.perform(get(OBSERVATION_WITHOUT_PROPERTIES))
 				.andExpect(status().isNotFound());
 	}
 
-	// PUBLIC THINGS
+	// PUBLIC OBSERVATIONS
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
 	void performReadRequest_AdminAndWithPublicProperty_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_PUBLIC))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_PUBLIC))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP024 - Koblenz-Friedrich-Ebert-Ring")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
 	@Test
 	@WithMockUser(username = "user")
 	void performReadRequest_UserAndWithPublicProperty_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_PUBLIC))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_PUBLIC))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP024 - Koblenz-Friedrich-Ebert-Ring")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
 	@Test
 	void performReadRequest_AnonymousAndWithPublicProperty_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_PUBLIC))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_PUBLIC))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP024 - Koblenz-Friedrich-Ebert-Ring")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
-	// THINGS WITH OWNER
+	// OBSERVATIONS WITH OWNER
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
 	void performReadRequest_AdminAndWithThingOwnerProperty_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_OWNER))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_OWNER))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP023 - Worms-Hagenstraße")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
 	@Test
 	@WithMockUser(username = "user")
 	void performReadRequest_ThingOwnerAndWithThingOwnerProperty_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_OWNER))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_OWNER))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP023 - Worms-Hagenstraße")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
 	@Test
 	void performReadRequest_AnonymousAndWithThingOwnerProperty_NotFound() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_OWNER))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_OWNER))
 				.andExpect(status().isNotFound());
 	}
 
-	// THINGS WITH CONSUMER
+	// OBSERVATIONS WITH CONSUMER
 
 	@Test
 	@WithMockUser(username = "admin", authorities = {"frost_admin"})
 	void performReadRequest_AdminAndWithThingConsumerPropertyProperty_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_CONSUMER))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_CONSUMER))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP022 - Bad Kreuznach-Bosenheimer Straße")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
 	@Test
 	@WithMockUser(username = "user")
 	void performReadRequest_ThingConsumerAndWithThingConsumerPropertyProperty_Ok() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_CONSUMER))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_CONSUMER))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("name", is("UBA: DERP022 - Bad Kreuznach-Bosenheimer Straße")));
+				.andExpect(jsonPath("result", is(12.6)));
 	}
 
 	@Test
 	void performReadRequest_AnonymousAndWithThingConsumerPropertyProperty_NotFound() throws Exception {
-		mockMvc.perform(get(THING_WITH_DE4L_CONSUMER))
+		mockMvc.perform(get(OBSERVATION_WITH_DE4L_CONSUMER))
 				.andExpect(status().isNotFound());
 	}
 
