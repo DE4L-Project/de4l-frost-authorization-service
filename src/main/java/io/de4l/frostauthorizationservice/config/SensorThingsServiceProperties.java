@@ -19,4 +19,6 @@ public class SensorThingsServiceProperties {
 
     @Value("de4lConsumer")
     private String consumerProperty;
+
+    private final String FILTER = "$filter";
 }

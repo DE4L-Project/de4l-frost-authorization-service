@@ -1,9 +1,11 @@
 package io.de4l.frostauthorizationservice.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Thing;
+import io.de4l.frostauthorizationservice.security.FrostAuthorization;
 import io.de4l.frostauthorizationservice.security.KeycloakUtils;
+import io.de4l.frostauthorizationservice.service.RequestBuilder;
+import io.de4l.frostauthorizationservice.service.ResponseCleaner;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,8 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 @CrossOrigin(origins = "*")
 public class ThingsController extends BaseRestController {
 
-    public ThingsController(SensorThingsServiceProperties sensorThingsServiceProperties, ObjectMapper objectMapper, KeycloakUtils keycloakUtils) {
-        super(sensorThingsServiceProperties, new Thing(), objectMapper, keycloakUtils);
+    public ThingsController(SensorThingsServiceProperties sensorThingsServiceProperties, KeycloakUtils keycloakUtils,
+                            RequestBuilder urlBuilder, ResponseCleaner responseCleaner, FrostAuthorization frostAuthorization) {
+        super(sensorThingsServiceProperties, new Thing(), keycloakUtils, urlBuilder, responseCleaner, frostAuthorization);
     }
 
     @GetMapping(value = {"Things", "Things({id})", "Datastreams({id})/Thing"}, produces = "application/json")
@@ -58,5 +61,6 @@ public class ThingsController extends BaseRestController {
     ) {
         return performCreateRequest(request, body);
     }
+
 
 }
