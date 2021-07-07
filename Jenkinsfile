@@ -1,5 +1,5 @@
 REPO_URL = "devdocker.wifa.uni-leipzig.de:5000"
-IMAGE_TAG = "de4l-frost-authorization-service"
+IMAGE_TAG = "de4l/frost-authorization-service"
 
 BUILD = BRANCH_NAME == 'master' ? 'latest' : BRANCH_NAME
 

@@ -1,5 +1,5 @@
 # Builder Image
-FROM gradle:7.0.0-jdk11 as compile-image
+FROM gradle:jdk16 as compile-image
 
 ENV PROJECT_HOME /home/app
 
@@ -12,7 +12,7 @@ RUN gradle clean assemble
 RUN mv build/libs/*.jar app.jar
 
 # App Image
-FROM openjdk:11-jdk
+FROM openjdk:16-jdk
 
 ENV PROJECT_HOME /home/app
 COPY --from=compile-image /home/app/app.jar $PROJECT_HOME/
