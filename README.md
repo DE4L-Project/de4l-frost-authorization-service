@@ -49,6 +49,7 @@
 | create    | -           | /Datastreams(id)/Observations | x     | -     | -        | -         |
 
 ¹ POST, PATCH, DELETE
+
 ² only applies to those things for which the user has the appropriate role (Owner, Consumer)
 
 ## Realization
