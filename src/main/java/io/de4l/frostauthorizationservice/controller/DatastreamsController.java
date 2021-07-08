@@ -1,5 +1,6 @@
 package io.de4l.frostauthorizationservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Datastream;
 import io.de4l.frostauthorizationservice.security.FrostAuthorization;
@@ -31,7 +32,7 @@ public class DatastreamsController extends BaseRestController {
     public ResponseEntity<String> getDatastream(
             @RequestParam(value = "$expand", required = false) String expand,
             HttpServletRequest request
-    ) {
+    ) throws JsonProcessingException {
         return performReadRequest(request, expand);
     }
 

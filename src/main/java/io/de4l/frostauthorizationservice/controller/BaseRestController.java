@@ -6,10 +6,11 @@ import io.de4l.frostauthorizationservice.model.StaEntity;
 import io.de4l.frostauthorizationservice.model.Thing;
 import io.de4l.frostauthorizationservice.security.FrostAuthorization;
 import io.de4l.frostauthorizationservice.security.KeycloakUtils;
-import io.de4l.frostauthorizationservice.service.ResponseCleaner;
 import io.de4l.frostauthorizationservice.service.RequestBuilder;
+import io.de4l.frostauthorizationservice.service.ResponseCleaner;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -18,12 +19,13 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 @RequestMapping(path = "/FROST-Server/v1.0/")
 @CrossOrigin(origins = "*")
@@ -35,9 +37,9 @@ public abstract class BaseRestController {
     protected final RequestBuilder requestBuilder;
     protected final ResponseCleaner responseCleaner;
     protected final FrostAuthorization frostAuthorization;
-
-    private final ResponseEntity<String> UNAUTHORIZED = new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
-    private final ResponseEntity<String> NOTHING_FOUND = new ResponseEntity<>("Nothing found", HttpStatus.NOT_FOUND);
+    private final ResponseEntity<String> UNAUTHORIZED;
+    private final ResponseEntity<String> NOTHING_FOUND;
+    private final String EXCEPTION_MESSAGE = "message";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -51,9 +53,15 @@ public abstract class BaseRestController {
         this.requestBuilder = requestBuilder;
         this.responseCleaner = responseCleaner;
         this.frostAuthorization = frostAuthorization;
+        Map<String,Object> unauthorizedMessage = new HashMap<>();
+        unauthorizedMessage.put(EXCEPTION_MESSAGE, "Unauthorized");
+        UNAUTHORIZED = new ResponseEntity<>(String.valueOf(new JSONObject(unauthorizedMessage)), HttpStatus.UNAUTHORIZED);
+        Map<String,Object> nothingFoundMessage = new HashMap<>();
+        nothingFoundMessage.put(EXCEPTION_MESSAGE, "Nothing Found");
+        NOTHING_FOUND = new ResponseEntity<>(String.valueOf(new JSONObject(nothingFoundMessage)), HttpStatus.NOT_FOUND);
     }
 
-    public ResponseEntity<String> performReadRequest(HttpServletRequest request, String expand) throws RestClientException {
+    public ResponseEntity<String> performReadRequest(HttpServletRequest request, String expand) throws RestClientException, JsonProcessingException {
         URI requestUri;
         if (keycloakUtils.isNotAuthenticated()) {
             // Public Request
@@ -68,16 +76,12 @@ public abstract class BaseRestController {
                 requestUri = requestBuilder.buildPrivateRequestUri(request.getRequestURI(), keycloakUtils.getName(), expand, staEntity);
             }
         }
-        try {
             ResponseEntity<String> response = restTemplate.exchange(
                     requestUri,
                     HttpMethod.GET,
                     new HttpEntity<String>(null, requestBuilder.buildRequestHeaders()), String.class);
             var cleanedResponse = responseCleaner.removeFilterFromResponse(response.getBody());
             return new ResponseEntity<>(cleanedResponse, response.getStatusCode());
-        } catch (HttpStatusCodeException | JsonProcessingException e) {
-            return NOTHING_FOUND;
-        }
     }
 
     public  ResponseEntity<String> performCreateRequest(HttpServletRequest request, String body) {
@@ -118,6 +122,14 @@ public abstract class BaseRestController {
     public ResponseEntity<Object> handleRestClientException(HttpClientErrorException e) {
         log.error(e.getMessage());
         return new ResponseEntity<>(e.getResponseBodyAsString(), requestBuilder.getErrorHttpHeaders(), e.getStatusCode());
+    }
+
+    @ExceptionHandler(JsonProcessingException.class)
+    public ResponseEntity<Object> handleJsonProcessingException(JsonProcessingException e) {
+        Map<String, Object> exceptionObject = new HashMap<>();
+        exceptionObject.put(EXCEPTION_MESSAGE, e.getMessage());
+        log.error(e.getMessage());
+        return new ResponseEntity<>(exceptionObject, requestBuilder.getErrorHttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
