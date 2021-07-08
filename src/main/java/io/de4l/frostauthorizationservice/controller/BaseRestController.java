@@ -15,6 +15,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,19 +62,19 @@ public abstract class BaseRestController {
         NOTHING_FOUND = new ResponseEntity<>(String.valueOf(new JSONObject(nothingFoundMessage)), HttpStatus.NOT_FOUND);
     }
 
-    public ResponseEntity<String> performReadRequest(HttpServletRequest request, String expand) throws RestClientException, JsonProcessingException {
+    public ResponseEntity<String> performReadRequest(HttpServletRequest request, MultiValueMap<String, String> requestParameters) throws RestClientException, JsonProcessingException {
         URI requestUri;
         if (keycloakUtils.isNotAuthenticated()) {
             // Public Request
-            requestUri = requestBuilder.buildPublicRequestUrl(request.getRequestURI(), expand, staEntity);
+            requestUri = requestBuilder.buildPublicRequestUrl(request.getRequestURI(), requestParameters, staEntity);
         } else {
             // Potential authenticated Request
             if (keycloakUtils.isAdmin()) {
                 // Admin request
-                requestUri = requestBuilder.buildUnfilteredUri(request.getRequestURI(), expand);
+                requestUri = requestBuilder.buildUnfilteredUri(request.getRequestURI(), requestParameters);
             } else {
                 // Consumer/Owner request
-                requestUri = requestBuilder.buildPrivateRequestUri(request.getRequestURI(), keycloakUtils.getName(), expand, staEntity);
+                requestUri = requestBuilder.buildPrivateRequestUri(request.getRequestURI(), keycloakUtils.getName(), requestParameters, staEntity);
             }
         }
             ResponseEntity<String> response = restTemplate.exchange(
@@ -95,7 +96,7 @@ public abstract class BaseRestController {
             }
         }
         ResponseEntity<String> response = restTemplate.exchange(
-                requestBuilder.buildUnfilteredUri(request.getRequestURI(), ""),
+                requestBuilder.buildUnfilteredUri(request.getRequestURI(), null),
                 HttpMethod.POST,
                 new HttpEntity<>(body, requestBuilder.buildRequestHeaders()), String.class);
         return new ResponseEntity<>(response.getBody(), response.getStatusCode());
@@ -109,7 +110,7 @@ public abstract class BaseRestController {
         if (keycloakUtils.isAdmin()
                 || frostAuthorization.isPrincipalTheThingOwner(request.getRequestURI(), keycloakUtils.getName(), staEntity)) {
             var response = restTemplate.exchange(
-                    requestBuilder.buildUnfilteredUri(request.getRequestURI(), ""),
+                    requestBuilder.buildUnfilteredUri(request.getRequestURI(), null),
                     HttpMethod.valueOf(request.getMethod()),
                     new HttpEntity<>(body, requestBuilder.buildRequestHeaders()), String.class);
             return new ResponseEntity<>(response.getBody(), response.getStatusCode());

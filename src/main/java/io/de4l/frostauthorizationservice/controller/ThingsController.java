@@ -9,6 +9,7 @@ import io.de4l.frostauthorizationservice.service.RequestBuilder;
 import io.de4l.frostauthorizationservice.service.ResponseCleaner;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,10 +34,10 @@ public class ThingsController extends BaseRestController {
 
     @GetMapping(value = {"Things", "Things({id})", "Datastreams({id})/Thing"}, produces = "application/json")
     public ResponseEntity<String> readThing(
-            @RequestParam(value = "$expand", required = false) String expand,
+            @RequestParam MultiValueMap<String, String> requestParameters,
             HttpServletRequest request
     ) throws JsonProcessingException {
-        return performReadRequest(request, expand);
+        return performReadRequest(request, requestParameters);
     }
 
     @RequestMapping(method = {RequestMethod.PUT, RequestMethod.PATCH},

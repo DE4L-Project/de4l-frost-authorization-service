@@ -6,6 +6,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -20,14 +21,39 @@ public class RequestBuilder {
         this.FILTER = sensorThingsServiceProperties.getFILTER();
     }
 
-    public URI buildUnfilteredUri(String requestUri, String expand) {
+    public URI buildUnfilteredUri(String requestUri, MultiValueMap<String, String> requestParameters) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
 
-        if (Strings.isNotBlank(expand)) {
-            uriComponentsBuilder.queryParam(FILTER, expand);
-        }
+        appendQueryParams(uriComponentsBuilder, requestParameters, "");
+
         return uriComponentsBuilder.build().toUri();
+    }
+
+    private void appendQueryParams(UriComponentsBuilder uriComponentsBuilder, MultiValueMap<String, String> queryParameters,
+                                                   String authorizationFilter) {
+        if (queryParameters == null) {
+            return;
+        }
+        var queryOptions = new String[]{"$expand", "$top", "$count", "$select", "$orderby", "$skip", "$resultFormat"};
+        for (String queryOption : queryOptions) {
+            if (Strings.isNotBlank(queryParameters.getFirst(queryOption))) {
+                uriComponentsBuilder.queryParam(queryOption, queryParameters.getFirst(queryOption));
+            }
+        }
+
+        if (authorizationFilter.isEmpty()) {
+            if (queryParameters.containsKey(FILTER)) {
+                uriComponentsBuilder.queryParam(FILTER, queryParameters.getFirst(FILTER));
+            }
+        } else {
+            if (queryParameters.containsKey(FILTER)) {
+                String concatenatedRequest = authorizationFilter.concat(" and " + queryParameters.getFirst(FILTER));
+                uriComponentsBuilder.queryParam(FILTER, concatenatedRequest);
+            } else {
+                uriComponentsBuilder.queryParam(FILTER, authorizationFilter);
+            }
+        }
     }
 
     public URI buildOwnerRequestUri(String requestUri, String userId, StaEntity staEntity) {
@@ -38,26 +64,21 @@ public class RequestBuilder {
         return uriComponentsBuilder.build().toUri();
     }
 
-    public URI buildPrivateRequestUri(String requestUri, String userId, String expand, StaEntity staEntity) {
+    public URI buildPrivateRequestUri(String requestUri, String userId, MultiValueMap<String, String> requestParameters, StaEntity staEntity) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
-        uriComponentsBuilder.queryParam(FILTER, buildOwnerFilter(userId, staEntity) + " or " +
-                buildPublicFilter(staEntity) + " or " + buildConsumerFilter(userId, staEntity));
-
-        if (Strings.isNotBlank(expand)) {
-            uriComponentsBuilder.queryParam(FILTER, expand);
-        }
+        var authenticationFilter = buildOwnerFilter(userId, staEntity) + " or " +
+                buildPublicFilter(staEntity) + " or " + buildConsumerFilter(userId, staEntity);
+       appendQueryParams(uriComponentsBuilder, requestParameters, authenticationFilter);
         return uriComponentsBuilder.build().toUri();
     }
 
-    public URI buildPublicRequestUrl(String requestUri, String expand, StaEntity staEntity) {
+    public URI buildPublicRequestUrl(String requestUri, MultiValueMap<String, String> requestParameters, StaEntity staEntity) {
         var uriComponentsBuilder = UriComponentsBuilder
                 .fromHttpUrl(sensorThingsServiceProperties.getFrostUri() + requestUri);
-        uriComponentsBuilder.queryParam(FILTER, buildPublicFilter(staEntity));
+        var authenticationFilter = buildPublicFilter(staEntity);
+        appendQueryParams(uriComponentsBuilder, requestParameters, authenticationFilter);
 
-        if (Strings.isNotBlank(expand)) {
-            uriComponentsBuilder.queryParam("$expand", expand);
-        }
         return uriComponentsBuilder.build().toUri();
     }
 
