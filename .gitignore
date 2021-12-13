@@ -1,5 +1,7 @@
 # Local dev files
 src/main/resources/application-dev-local.properties
+src/main/resources/application-dev.properties
+src/main/resources/application-test.properties
 
 # Compiled class file
 *.class

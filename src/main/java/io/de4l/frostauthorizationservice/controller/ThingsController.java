@@ -1,10 +1,22 @@
 package io.de4l.frostauthorizationservice.controller;
 
-import io.de4l.frostauthorizationservice.frost.SensorThingsServiceProperties;
+import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Thing;
+import io.de4l.frostauthorizationservice.security.FrostAuthorization;
+import io.de4l.frostauthorizationservice.security.KeycloakUtils;
+import io.de4l.frostauthorizationservice.service.RequestBuilder;
+import io.de4l.frostauthorizationservice.service.ResponseCleaner;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -13,26 +25,42 @@ import javax.servlet.http.HttpServletRequest;
 @CrossOrigin(origins = "*")
 public class ThingsController extends BaseRestController {
 
-    public ThingsController(SensorThingsServiceProperties sensorThingsServiceProperties) {
-        super(sensorThingsServiceProperties, new Thing());
+    public ThingsController(SensorThingsServiceProperties sensorThingsServiceProperties, KeycloakUtils keycloakUtils,
+                            RequestBuilder urlBuilder, ResponseCleaner responseCleaner, FrostAuthorization frostAuthorization) {
+        super(sensorThingsServiceProperties, new Thing(), keycloakUtils, urlBuilder, responseCleaner, frostAuthorization);
     }
 
-    @GetMapping(value = "Things({id})", produces = "application/json")
-    public String single(
-            @PathVariable("id") String id,
+    @GetMapping(value = {"Things", "Things({id})", "Datastreams({id})/Thing"}, produces = "application/json")
+    public ResponseEntity<String> readThing(
             @RequestParam(value = "$expand", required = false) String expand,
-            JwtAuthenticationToken token,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performReadRequest(request, expand);
     }
 
-    @GetMapping(value = "Things", produces = "application/json")
-    public String list(
-            @RequestParam(value = "$expand", required = false) String expand,
-            JwtAuthenticationToken token,
+    @RequestMapping(method = {RequestMethod.PUT, RequestMethod.PATCH},
+            value = "Things({id})", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> updateThing(
+            @RequestBody String body,
             HttpServletRequest request
     ) {
-        return executeFrostRequest(request, token, expand);
+        return performUpdateRequest(request, body);
     }
+
+    @DeleteMapping(value = "Things({id})", produces = "application/json")
+    public ResponseEntity<String> deleteThing(
+            HttpServletRequest request
+    ) {
+        return performUpdateRequest(request, null);
+    }
+
+    @PostMapping(value = "Things", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<String> createThing(
+            @RequestBody String body,
+            HttpServletRequest request
+    ) {
+        return performCreateRequest(request, body);
+    }
+
+
 }
