@@ -8,6 +8,10 @@ group = 'io.de4l'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '16'
 
+//Avoid Log4j2 Shell
+//https://spring.io/blog/2021/12/10/log4j2-vulnerability-and-spring-boot
+ext['log4j2.version'] = '2.15.0'
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
