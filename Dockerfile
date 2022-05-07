@@ -9,7 +9,7 @@ USER root
 WORKDIR $PROJECT_HOME
 
 RUN gradle clean assemble
-RUN mv build/libs/*.jar app.jar
+RUN mv build/libs/*SNAPSHOT.jar app.jar
 
 # App Image
 FROM openjdk:16-jdk
