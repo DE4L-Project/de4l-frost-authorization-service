@@ -1,7 +1,7 @@
 REPO_URL = "devdocker.wifa.uni-leipzig.de:5000"
 IMAGE_TAG = "de4l/frost-authorization-service"
 
-BUILD = BRANCH_NAME == 'master' ? 'latest' : BRANCH_NAME
+BUILD = BRANCH_NAME == 'main' ? 'latest' : BRANCH_NAME
 
 node('master') {
     checkout scm
@@ -20,4 +20,3 @@ node('master') {
         sh "sudo docker push ${REPO_URL}/${IMAGE_TAG}:${BUILD}"
     }
 }
-

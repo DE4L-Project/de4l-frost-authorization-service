@@ -1,12 +1,16 @@
 plugins {
-    id 'org.springframework.boot' version '2.4.5'
+    id 'org.springframework.boot' version '2.6.7'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
 }
 
 group = 'io.de4l'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '15'
+sourceCompatibility = '16'
+
+//Avoid Log4j2 Shell
+//https://spring.io/blog/2021/12/10/log4j2-vulnerability-and-spring-boot
+ext['log4j2.version'] = '2.15.0'
 
 configurations {
     compileOnly {
@@ -25,11 +29,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-
     implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5'
-
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-joda', version: '2.10.2'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.2'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
