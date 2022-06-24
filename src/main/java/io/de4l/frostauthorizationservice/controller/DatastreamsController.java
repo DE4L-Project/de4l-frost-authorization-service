@@ -1,5 +1,6 @@
 package io.de4l.frostauthorizationservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.de4l.frostauthorizationservice.config.SensorThingsServiceProperties;
 import io.de4l.frostauthorizationservice.model.Datastream;
 import io.de4l.frostauthorizationservice.security.FrostAuthorization;
@@ -7,6 +8,7 @@ import io.de4l.frostauthorizationservice.security.KeycloakUtils;
 import io.de4l.frostauthorizationservice.service.RequestBuilder;
 import io.de4l.frostauthorizationservice.service.ResponseCleaner;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,10 +31,10 @@ public class DatastreamsController extends BaseRestController {
 
     @GetMapping(value = {"Datastreams({id})", "Datastreams", "Things({id})/Datastreams"}, produces = "application/json")
     public ResponseEntity<String> getDatastream(
-            @RequestParam(value = "$expand", required = false) String expand,
+            @RequestParam MultiValueMap<String, String> requestParameters,
             HttpServletRequest request
-    ) {
-        return performReadRequest(request, expand);
+    ) throws JsonProcessingException {
+        return performReadRequest(request, requestParameters);
     }
 
     @RequestMapping(method = {RequestMethod.PUT, RequestMethod.PATCH},
